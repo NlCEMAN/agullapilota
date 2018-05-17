@@ -26,10 +26,10 @@
 
                 //var ballBody = world.createDynamicBody({ position: Vec2(-6, 0), bullet: true  });
                 var ballBody = world.createDynamicBody({ position: Vec2(23, -45), bullet: true  });
-                ballBody.createFixture(pl.Circle(1.15), 1);
+                ballBody.createFixture(pl.Circle(1), 1);
 
                 var ballBody2 = world.createDynamicBody({ position: Vec2(-7, 0), bullet: true  });
-                ballBody2.createFixture(pl.Circle(1.15), 1);
+                ballBody2.createFixture(pl.Circle(1), 1);
 
                 var bodys = {};
                 baseGround.forEach(e => bodys[e.name] = world.createBody());
@@ -89,6 +89,11 @@
                 ballBody2.getFixtureList().m_filterMaskBits = filterCategoryBall | filterCategoryGround | filterCategorySensor;*/
                 ballBody.getFixtureList().m_filterMaskBits = filterCategoryBall | filterCategoryLanzadera | filterCategorySensor;
                 ballBody2.getFixtureList().m_filterMaskBits = filterCategoryBall | filterCategoryLanzadera | filterCategorySensor;
+                ballBody.getFixtureList().setRestitution(0.2);
+                ballBody2.getFixtureList().setRestitution(0.2);
+                //ballBody.setFixedRotation(true);
+                //ballBody2.setFixedRotation(true);
+
 
                 //GroundExt
                 let fixture = bodys['groundExt'].getFixtureList();
@@ -210,14 +215,14 @@
                 });
 
                 //CircleLogic
-                let reboteMinimo = 3;
-                let reboteMaximo = 10;
+                let reboteMinimo = 20;
+                let reboteMaximo = 60;
                 world.on('end-contact', (contact, oldManifold) => {
                     let circle = contact.getFixtureA().getBody();
                     if(circle == bodys['pelotas']) {
                         let bodyBall = contact.getFixtureB().getBody();
                         let v = bodyBall.getLinearVelocity();
-                        console.log(v);
+                        //console.log(v);
                         let impulse = v.mul(1.5);
                         if(Math.abs(impulse.x) < reboteMinimo && Math.abs(impulse.y) < reboteMinimo) {
                             let bigger = v.x > v.y ? v.x : v.y;
@@ -229,8 +234,12 @@
                             let divisor = bigger / reboteMaximo;
                             impulse = Vec2(v.x/divisor, v.y/divisor);
                         }
-                        console.log(impulse);
-                        //bodyBall.applyLinearImpulse(impluse, Vec2(0,0), true);
+                        //console.log(impulse);
+                        console.log(bodyBall);
+                        bodyBall.setFixedRotation(true);
+                        bodyBall.m_sweep.a = 0;
+                        bodyBall.applyLinearImpulse(impulse, Vec2(0,0), true);
+                        bodyBall.setFixedRotation(false);
                     }
                 });
 

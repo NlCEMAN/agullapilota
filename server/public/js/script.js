@@ -8,7 +8,7 @@ var init = function() {
     camera.position.set(0, -110, 150);
     camera.lookAt(0, 0, 0);
 
-    //var controls = new THREE.OrbitControls(camera);
+    var controls = new THREE.OrbitControls(camera);
 
     var renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -41,8 +41,7 @@ var init = function() {
     //world = new pl.World(Vec2(0, -50));
     world = new pl.World(Vec2(0, -10));
 
-    //var ballBody = world.createDynamicBody({ position: Vec2(22.5, -45), bullet: true });
-    var ballBody = world.createDynamicBody({ position: Vec2(22.5, -45), bullet: true });
+    var ballBody = world.createDynamicBody({ position: Vec2(22, -46), bullet: true });
     ballBody.createFixture(pl.Circle(1.15), 1);
 
     var bodys = {};
@@ -112,7 +111,8 @@ var init = function() {
 
     ballBody.getFixtureList().m_filterCategoryBits = filterCategoryBall;
     ballBody.getFixtureList().m_filterMaskBits = filterCategoryBall | filterCategoryLanzadera | filterCategorySensor;
-    ballBody.getFixtureList().setRestitution(0.1);
+    ballBody.getFixtureList().setRestitution(0.2);
+    //ballBody.setFixedRotation(true);
 
     //GroundExt
     let fixture = bodys['groundExt'].getFixtureList();
@@ -246,8 +246,8 @@ var init = function() {
     });
 
     //CircleLogic
-    let reboteMinimo = 3;
-    let reboteMaximo = 10;
+    let reboteMinimo = 8;
+    let reboteMaximo = 18;
     world.on('end-contact', (contact, oldManifold) => {
         let circle = contact.getFixtureA().getBody();
         if(circle == bodys['pelotas']) {
@@ -256,30 +256,33 @@ var init = function() {
             console.log(v);
             let impulse = v.mul(1.5);
             if(Math.abs(impulse.x) < reboteMinimo && Math.abs(impulse.y) < reboteMinimo) {
-                let bigger = v.x > v.y ? v.x : v.y;
+                let bigger = Math.abs(v.x) > Math.abs(v.y) ? v.x : v.y;
                 let multiplicador = reboteMinimo / bigger;
                 impulse = v.mul(multiplicador);
             }
             if(Math.abs(impulse.x) > reboteMaximo && Math.abs(impulse.y) > reboteMaximo) {
-                let bigger = v.x > v.y ? v.x : v.y;
+                let bigger = Math.abs(v.x) > Math.abs(v.y) ? v.x : v.y;
                 let divisor = bigger / reboteMaximo;
-                impluse = Vec2(v.x/divisor, v.y/divisor);
+                impulse = Vec2(v.x/divisor, v.y/divisor);
             }
-            bodyBall.applyLinearImpulse(v.mul(1.5), Vec2(0,0), true);
+            bodyBall.setFixedRotation(true);
+            bodyBall.m_sweep.a = 0;
+            bodyBall.applyLinearImpulse(impulse, Vec2(0,0), true);
+            bodyBall.setFixedRotation(false);
         }
     });
 
     var animate = function () {
-        var ballPosition = ballBody.getPosition();
+        /*var ballPosition = ballBody.getPosition();
         camera.position.set(0, ballPosition.y - 100, 90);
         if(camera.position.y < -80) camera.position.y = -80;
         if(camera.position.y > 0) camera.position.y = 0;
-        camera.lookAt(0, ball.position.y, ball.position.z);
+        camera.lookAt(0, ball.position.y, ball.position.z);*/
         //console.log(camera.position.y);
 
         requestAnimationFrame(animate);
         updatePhysics();
-        //controls.update();
+        controls.update();
         renderer.render(scene, camera);
     };
 
@@ -297,13 +300,13 @@ var init = function() {
 
     document.body.addEventListener("keyup", evt => {
         if(evt.keyCode == 82) {
-            ballBody.setPosition(Vec2(23, -45));
-            ballBody.getFixtureList().m_filterMaskBits = filterCategoryBall | filterCategoryLanzadera | filterCategorySensor;
             ballBody.setLinearVelocity(Vec2(0, 0));
+            ballBody.getFixtureList().m_filterMaskBits = filterCategoryBall | filterCategoryLanzadera | filterCategorySensor;
+            ballBody.setPosition(Vec2(22, -46));
             inShuttle = true;
         }
         if(evt.keyCode == 32) {
-            ballBody.applyLinearImpulse(Vec2(0, 700), Vec2(0,0), true);
+            ballBody.applyLinearImpulse(Vec2(0, 254), Vec2(0,0), true);
         }
     });
 
