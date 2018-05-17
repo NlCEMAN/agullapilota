@@ -5,23 +5,25 @@ var init = function() {
     var scene = new THREE.Scene();
     scene.background = new THREE.Color(0xF4DAE3);
     var camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, -125, 90);
+    camera.position.set(0, -110, 150);
     camera.lookAt(0, 0, 0);
 
-    var controls = new THREE.OrbitControls(camera);
+    //var controls = new THREE.OrbitControls(camera);
 
     var renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     document.body.appendChild( renderer.domElement );
 
-    var light = new THREE.DirectionalLight( 0xffffff, 1, 100 );
-    light.position.set(0, -125, 75);
+    //var light = new THREE.DirectionalLight( 0xffffff, 1, 100 );
+    var light = new THREE.DirectionalLight( 0xffffff, 1, 200 );
+    light.position.set(0, -50, 80);
     scene.add(light);
     scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 
     var loader = new THREE.ColladaLoader();
-    loader.load("models/supreme.dae", function(collada) {
+    //loader.load("models/supreme.dae", function(collada) {
+    loader.load("models/upRickAndMorty.dae", function(collada) {
         scene.add(collada.scene);
     });
 
@@ -37,10 +39,10 @@ var init = function() {
     pl = planck;
     Vec2 = pl.Vec2;
     //world = new pl.World(Vec2(0, -50));
-    world = new pl.World(Vec2(0, -5));
+    world = new pl.World(Vec2(0, -10));
 
-    //var ballBody = world.createDynamicBody({ position: Vec2(-6, 0), bullet: true });
-    var ballBody = world.createDynamicBody({ position: Vec2(23, -45), bullet: true });
+    //var ballBody = world.createDynamicBody({ position: Vec2(22.5, -45), bullet: true });
+    var ballBody = world.createDynamicBody({ position: Vec2(22.5, -45), bullet: true });
     ballBody.createFixture(pl.Circle(1.15), 1);
 
     var bodys = {};
@@ -68,7 +70,7 @@ var init = function() {
             var y1 = obj.points[index1 + 2];
             var x2 = obj.points[index2];
             var y2 = obj.points[index2 + 2];
-            if(obj.name != 'flipperLeft' && obj.name != 'flipperRight') {
+            if(obj.name != 'leftFlipper' && obj.name != 'rightFlipper') {
                 bodys[obj.name].createFixture(pl.Edge(Vec2(x1, y1), Vec2(x2, y2)), 0);
             }
         }
@@ -97,10 +99,7 @@ var init = function() {
 
     //8.73, 36.5
     flippers.push(createFlipper(true, new THREE.Vector3(-7.92, -37.07, 1), bodys['groundInt'], scene, world, pl, Vec2, baseGround));
-    //flippers.push(createFlipper(false, new THREE.Vector3(7.92, -37.07, 1), bodys['groundInt'], scene, world, pl, Vec2));
-
-    console.table(flippers);
-
+    flippers.push(createFlipper(false, new THREE.Vector3(7.92, -37.07, 1), bodys['groundInt'], scene, world, pl, Vec2, baseGround));
 
     heightmapRampaLeft.sort((a, b) => a.y1 - b.y1);
     heightmapRampaRight.sort((a, b) => a.y1 - b.y1);
@@ -113,7 +112,7 @@ var init = function() {
 
     ballBody.getFixtureList().m_filterCategoryBits = filterCategoryBall;
     ballBody.getFixtureList().m_filterMaskBits = filterCategoryBall | filterCategoryLanzadera | filterCategorySensor;
-    ballBody.getFixtureList().setRestitution(0.3);
+    ballBody.getFixtureList().setRestitution(0.1);
 
     //GroundExt
     let fixture = bodys['groundExt'].getFixtureList();
@@ -247,21 +246,36 @@ var init = function() {
     });
 
     //CircleLogic
+    let reboteMinimo = 3;
+    let reboteMaximo = 10;
     world.on('end-contact', (contact, oldManifold) => {
         let circle = contact.getFixtureA().getBody();
         if(circle == bodys['pelotas']) {
             let bodyBall = contact.getFixtureB().getBody();
             let v = bodyBall.getLinearVelocity();
+            console.log(v);
+            let impulse = v.mul(1.5);
+            if(Math.abs(impulse.x) < reboteMinimo && Math.abs(impulse.y) < reboteMinimo) {
+                let bigger = v.x > v.y ? v.x : v.y;
+                let multiplicador = reboteMinimo / bigger;
+                impulse = v.mul(multiplicador);
+            }
+            if(Math.abs(impulse.x) > reboteMaximo && Math.abs(impulse.y) > reboteMaximo) {
+                let bigger = v.x > v.y ? v.x : v.y;
+                let divisor = bigger / reboteMaximo;
+                impluse = Vec2(v.x/divisor, v.y/divisor);
+            }
             bodyBall.applyLinearImpulse(v.mul(1.5), Vec2(0,0), true);
         }
     });
 
     var animate = function () {
         var ballPosition = ballBody.getPosition();
-        camera.position.set(0, ballPosition.y - 100, 80);
-        if(camera.position.y < -100) camera.position.y = -100;
+        camera.position.set(0, ballPosition.y - 100, 90);
+        if(camera.position.y < -80) camera.position.y = -80;
         if(camera.position.y > 0) camera.position.y = 0;
         camera.lookAt(0, ball.position.y, ball.position.z);
+        //console.log(camera.position.y);
 
         requestAnimationFrame(animate);
         updatePhysics();
@@ -289,7 +303,7 @@ var init = function() {
             inShuttle = true;
         }
         if(evt.keyCode == 32) {
-            ballBody.applyLinearImpulse(Vec2(0, 2000), Vec2(0,0), true);
+            ballBody.applyLinearImpulse(Vec2(0, 700), Vec2(0,0), true);
         }
     });
 

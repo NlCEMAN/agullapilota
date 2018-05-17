@@ -37,6 +37,9 @@
                 var leftFlipperCustom = world.createDynamicBody({ position: Vec2(-7.92, -37.07), bullet: true  });
                 leftFlipperCustom.createFixture(pl.Circle(1), 50);
 
+                var rightFlipperCustom = world.createDynamicBody({ position: Vec2(7.92, -37.07), bullet: true  });
+                rightFlipperCustom.createFixture(pl.Circle(1), 50);
+
                 for(var obj of baseGround) {
                     for(var i = 0; i < obj.lines.length; i += 2) {
                         let index1 = obj.lines[i] * 3;
@@ -46,10 +49,8 @@
                         var x2 = obj.points[index2];
                         var y2 = obj.points[index2 + 2];
                         bodys[obj.name].createFixture(pl.Edge(Vec2(x1, y1), Vec2(x2, y2)), 0);
-                        if(obj.name == 'flipperLeft') {
-                            let f = leftFlipperCustom.createFixture(pl.Edge(Vec2(x1-1, y1), Vec2(x2-1, y2)), 50);
-                            //console.log(f);
-                        }
+                        if(obj.name == 'leftFlipper') leftFlipperCustom.createFixture(pl.Edge(Vec2(x1, y1), Vec2(x2, y2)), 50);
+                        if(obj.name == 'rightFlipper') rightFlipperCustom.createFixture(pl.Edge(Vec2(x1, y1), Vec2(x2, y2)), 50);
                     }
                 }
 
@@ -62,7 +63,17 @@
                     maxMotorTorque: 1000000
                 };
 
-                var joint = world.createJoint(pl.RevoluteJoint(optionJoint, bodys['groundInt'], leftFlipperCustom, Vec2(-7.92, -37.07)));
+                var optionJoint2 = {
+                    enableMotor: true,
+                    lowerAngle: -0.52,
+                    upperAngle: 0.52,
+                    enableLimit: true,
+                    collideConnected: false,
+                    maxMotorTorque: 1000000
+                };
+
+                var joint = world.createJoint(pl.RevoluteJoint(optionJoint, bodys['groundInt'], leftFlipperCustom, Vec2(-8.09, -37.32)));
+                var joint2 = world.createJoint(pl.RevoluteJoint(optionJoint2, bodys['groundInt'], rightFlipperCustom, Vec2(7.92, -37.07)));
                 console.log(leftFlipperCustom);
                 console.log(joint);
 
@@ -198,12 +209,54 @@
                     }
                 });
 
+                //CircleLogic
+                let reboteMinimo = 3;
+                let reboteMaximo = 10;
+                world.on('end-contact', (contact, oldManifold) => {
+                    let circle = contact.getFixtureA().getBody();
+                    if(circle == bodys['pelotas']) {
+                        let bodyBall = contact.getFixtureB().getBody();
+                        let v = bodyBall.getLinearVelocity();
+                        console.log(v);
+                        let impulse = v.mul(1.5);
+                        if(Math.abs(impulse.x) < reboteMinimo && Math.abs(impulse.y) < reboteMinimo) {
+                            let bigger = v.x > v.y ? v.x : v.y;
+                            let multiplicador = reboteMinimo / bigger;
+                            impulse = v.mul(multiplicador);
+                        }
+                        if(Math.abs(impulse.x) > reboteMaximo && Math.abs(impulse.y) > reboteMaximo) {
+                            let bigger = v.x > v.y ? v.x : v.y;
+                            let divisor = bigger / reboteMaximo;
+                            impulse = Vec2(v.x/divisor, v.y/divisor);
+                        }
+                        console.log(impulse);
+                        //bodyBall.applyLinearImpulse(impluse, Vec2(0,0), true);
+                    }
+                });
+
                 testbed.step = function(settings) {
+                    /*joint.m_bodyB.setFixedRotation(false);
+                    let actualAngle = joint.getJointAngle();
+                    if(Math.abs(actualAngle) >= 0.52) {
+                        console.log('yes');
+                        joint.m_bodyB.m_sweep.a = testbed.activeKeys.left ? 0.52 : -0.52;
+                        joint.m_bodyB.setFixedRotation(true);
+                    } else {
+                        console.log("nope");
+                    }
+
+                    let velocity = testbed.activeKeys.left ? 30 : -30;
+                    joint.setMotorSpeed(velocity);*/
+
+
                     joint.m_bodyB.setFixedRotation(false);
                     if(testbed.activeKeys.left) {
                         if(joint.getJointAngle() >= 0.52) {
+                            console.log('yes');
                             joint.m_bodyB.m_sweep.a = 0.52;
                             joint.m_bodyB.setFixedRotation(true);
+                        } else {
+                            console.log('nope');
                         }
                         joint.setMotorSpeed(30);
                     } else {
@@ -212,6 +265,23 @@
                             joint.m_bodyB.setFixedRotation(true);
                         }
                         joint.setMotorSpeed(-30);
+                    }
+
+                    //console.log(joint2.getJointAngle());
+
+                    joint2.m_bodyB.setFixedRotation(false);
+                    if(testbed.activeKeys.right) {
+                        if(joint2.getJointAngle() <= -0.52) {
+                            joint2.m_bodyB.m_sweep.a = -0.52;
+                            joint2.m_bodyB.setFixedRotation(true);
+                        }
+                        joint2.setMotorSpeed(-30);
+                    } else {
+                        if(joint2.getJointAngle() >= 0.52) {
+                            joint2.m_bodyB.m_sweep.a = 0.52;
+                            joint2.m_bodyB.setFixedRotation(true);
+                        }
+                        joint2.setMotorSpeed(30);
                     }
                 };
 
