@@ -165,6 +165,20 @@
                     fixture.setSensor(true);
                     fixture = fixture.getNext();
                 }
+                //topRampaLeftSensor
+                fixture = bodys['topRampaLeft'].getFixtureList();
+                while(fixture != null) {
+                    fixture.m_filterCategoryBits = filterCategorySensor;
+                    fixture.setSensor(true);
+                    fixture = fixture.getNext();
+                }
+                //topRampaRightSensor
+                fixture = bodys['topRampaRight'].getFixtureList();
+                while(fixture != null) {
+                    fixture.m_filterCategoryBits = filterCategorySensor;
+                    fixture.setSensor(true);
+                    fixture = fixture.getNext();
+                }
                 //heightmapRampaRight
                 fixture = bodys['heightmapRampaRight'].getFixtureList();
                 while(fixture != null) {
@@ -186,6 +200,18 @@
                     fixture = fixture.getNext();
                 }
 
+                //RampLogicOnTheTop
+                world.on('begin-contact', (contact, oldManifold) => {
+                    let bodyA = contact.getFixtureA().getBody();
+                    let bodyTopLeft = bodys['topRampaLeft'].getFixtureList().getBody();
+                    if(bodyA == bodyTopLeft) {
+                        let velY = contact.getFixtureB().getBody().getLinearVelocity();
+                        if(velY.y > 0) onTheTop = true;
+                        else onTheTop = false;
+                    }
+                });
+
+                //RampLogic
                 world.on('end-contact', (contact, oldManifold) => {
                     let bodyA = contact.getFixtureA().getBody();
                     let bodyEntradaLeft = bodys['entradaRampaLeftSensor'].getFixtureList().getBody();
@@ -205,9 +231,11 @@
                     }
                 });
 
+                //lanzadera
                 world.on('end-contact', (contact, oldManifold) => {
                     let bodyA = contact.getFixtureA().getBody();
                     let bodySalidaLanzadera = bodys['lanzaderaSalida'].getFixtureList().getBody();
+                    console.log('lol');
                     if(bodyA == bodySalidaLanzadera) {
                         let actualBall = contact.getFixtureB();
                         actualBall.m_filterMaskBits = filterCategoryBall | filterCategoryGround | filterCategorySensor;
@@ -215,31 +243,27 @@
                 });
 
                 //CircleLogic
-                let reboteMinimo = 20;
-                let reboteMaximo = 60;
+                let reboteMinimo = 8;
+                let reboteMaximo = 15
                 world.on('end-contact', (contact, oldManifold) => {
                     let circle = contact.getFixtureA().getBody();
                     if(circle == bodys['pelotas']) {
                         let bodyBall = contact.getFixtureB().getBody();
                         let v = bodyBall.getLinearVelocity();
-                        //console.log(v);
+                        console.log(v);
                         let impulse = v.mul(1.5);
                         if(Math.abs(impulse.x) < reboteMinimo && Math.abs(impulse.y) < reboteMinimo) {
-                            let bigger = v.x > v.y ? v.x : v.y;
-                            let multiplicador = reboteMinimo / bigger;
+                            let bigger = Math.abs(v.x) > Math.abs(v.y) ? v.x : v.y;
+                            let multiplicador = Math.abs(reboteMinimo / bigger);
                             impulse = v.mul(multiplicador);
                         }
-                        if(Math.abs(impulse.x) > reboteMaximo && Math.abs(impulse.y) > reboteMaximo) {
-                            let bigger = v.x > v.y ? v.x : v.y;
-                            let divisor = bigger / reboteMaximo;
+                        if(Math.abs(impulse.x) > reboteMaximo || Math.abs(impulse.y) > reboteMaximo) {
+                            let bigger = Math.abs(v.x) > Math.abs(v.y) ? v.x : v.y;
+                            let divisor = Math.abs(bigger / reboteMaximo);
                             impulse = Vec2(v.x/divisor, v.y/divisor);
                         }
-                        //console.log(impulse);
-                        console.log(bodyBall);
-                        bodyBall.setFixedRotation(true);
-                        bodyBall.m_sweep.a = 0;
+                        console.log('hey');
                         bodyBall.applyLinearImpulse(impulse, Vec2(0,0), true);
-                        bodyBall.setFixedRotation(false);
                     }
                 });
 

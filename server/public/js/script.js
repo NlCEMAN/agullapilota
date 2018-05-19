@@ -22,8 +22,8 @@ var init = function() {
     scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 
     var loader = new THREE.ColladaLoader();
-    //loader.load("models/supreme.dae", function(collada) {
-    loader.load("models/upRickAndMorty.dae", function(collada) {
+    loader.load("models/supreme.dae", function(collada) {
+    //loader.load("models/upRickAndMorty.dae", function(collada) {
         scene.add(collada.scene);
     });
 
@@ -59,7 +59,7 @@ var init = function() {
     var theTop = 8.5;
 
     var inShuttle = true;
-    var theTopOfShuttle = 2.75;
+    var theTopOfShuttle = 2.5;
 
     for(var obj of baseGround) {
         for(var i = 0; i < obj.lines.length; i += 2) {
@@ -97,8 +97,8 @@ var init = function() {
     }
 
     //8.73, 36.5
-    flippers.push(createFlipper(true, new THREE.Vector3(-7.92, -37.07, 1), bodys['groundInt'], scene, world, pl, Vec2, baseGround));
-    flippers.push(createFlipper(false, new THREE.Vector3(7.92, -37.07, 1), bodys['groundInt'], scene, world, pl, Vec2, baseGround));
+    flippers.push(createFlipper(true, new THREE.Vector3(-7.34, -37.5, 1), bodys['groundInt'], scene, world, pl, Vec2, baseGround));
+    flippers.push(createFlipper(false, new THREE.Vector3(7.34, -37.5, 1), bodys['groundInt'], scene, world, pl, Vec2, baseGround));
 
     heightmapRampaLeft.sort((a, b) => a.y1 - b.y1);
     heightmapRampaRight.sort((a, b) => a.y1 - b.y1);
@@ -184,6 +184,20 @@ var init = function() {
         fixture.setSensor(true);
         fixture = fixture.getNext();
     }
+    //topRampaLeftSensor
+    fixture = bodys['topRampaLeft'].getFixtureList();
+    while(fixture != null) {
+        fixture.m_filterCategoryBits = filterCategorySensor;
+        fixture.setSensor(true);
+        fixture = fixture.getNext();
+    }
+    //topRampaRightSensor
+    fixture = bodys['topRampaRight'].getFixtureList();
+    while(fixture != null) {
+        fixture.m_filterCategoryBits = filterCategorySensor;
+        fixture.setSensor(true);
+        fixture = fixture.getNext();
+    }
     //heightmapRampaRight
     fixture = bodys['heightmapRampaRight'].getFixtureList();
     while(fixture != null) {
@@ -204,6 +218,18 @@ var init = function() {
         fixture.setSensor(true);
         fixture = fixture.getNext();
     }
+
+    //RampLogicOnTheTop
+    world.on('begin-contact', (contact, oldManifold) => {
+        let bodyA = contact.getFixtureA().getBody();
+        let bodyTopLeft = bodys['topRampaLeft'].getFixtureList().getBody();
+        let bodyTopRight = bodys['topRampaRight'].getFixtureList().getBody();
+        if(bodyA == bodyTopLeft || bodyA == bodyTopRight) {
+            let velY = contact.getFixtureB().getBody().getLinearVelocity();
+            if(velY.y > 0) onTheTop = true;
+            else onTheTop = false;
+        }
+    });
 
     //RampsLogic
     world.on('end-contact', (contact, oldManifold) => {
@@ -247,42 +273,38 @@ var init = function() {
 
     //CircleLogic
     let reboteMinimo = 8;
-    let reboteMaximo = 18;
+    let reboteMaximo = 15
     world.on('end-contact', (contact, oldManifold) => {
         let circle = contact.getFixtureA().getBody();
         if(circle == bodys['pelotas']) {
             let bodyBall = contact.getFixtureB().getBody();
             let v = bodyBall.getLinearVelocity();
-            console.log(v);
             let impulse = v.mul(1.5);
             if(Math.abs(impulse.x) < reboteMinimo && Math.abs(impulse.y) < reboteMinimo) {
                 let bigger = Math.abs(v.x) > Math.abs(v.y) ? v.x : v.y;
-                let multiplicador = reboteMinimo / bigger;
+                let multiplicador = Math.abs(reboteMinimo / bigger);
                 impulse = v.mul(multiplicador);
             }
-            if(Math.abs(impulse.x) > reboteMaximo && Math.abs(impulse.y) > reboteMaximo) {
+            if(Math.abs(impulse.x) > reboteMaximo || Math.abs(impulse.y) > reboteMaximo) {
                 let bigger = Math.abs(v.x) > Math.abs(v.y) ? v.x : v.y;
-                let divisor = bigger / reboteMaximo;
+                let divisor = Math.abs(bigger / reboteMaximo);
                 impulse = Vec2(v.x/divisor, v.y/divisor);
             }
-            bodyBall.setFixedRotation(true);
-            bodyBall.m_sweep.a = 0;
             bodyBall.applyLinearImpulse(impulse, Vec2(0,0), true);
-            bodyBall.setFixedRotation(false);
         }
     });
 
     var animate = function () {
-        /*var ballPosition = ballBody.getPosition();
+        var ballPosition = ballBody.getPosition();
         camera.position.set(0, ballPosition.y - 100, 90);
         if(camera.position.y < -80) camera.position.y = -80;
         if(camera.position.y > 0) camera.position.y = 0;
-        camera.lookAt(0, ball.position.y, ball.position.z);*/
+        camera.lookAt(0, ball.position.y, ball.position.z);
         //console.log(camera.position.y);
 
         requestAnimationFrame(animate);
         updatePhysics();
-        controls.update();
+        //controls.update();
         renderer.render(scene, camera);
     };
 
@@ -329,9 +351,8 @@ var init = function() {
                             let porcentaje = distance2 / distance;
                             let lol =  Math.abs(position.z1 - position.z2);
                             let z = position.z1 - (lol * porcentaje);
-                            //console.log(ballPosition.y + ", " + position.y1 + ", " + position.y2 + "," + porcentaje + "," + z + "," + lol);
                             ball.position.z = -z + 1;
-                            //console.log(-z + 1);
+                            //console.log(ballPosition.y + ", " + position.y1 + ", " + position.y2 + "," + porcentaje + "," + z + "," + lol);
                         }
                     } else {
                         salir = true;
@@ -339,14 +360,13 @@ var init = function() {
                     }
                 }
             }
-            if(salir == false) onTheTop = true;
         } else if(inShuttle) {
             ball.position.z = theTopOfShuttle;
         } else {
-            if(ball.position.z > 1.25) {
+            if(ball.position.z > 1) {
                 ball.position.z -= 0.50;
             } else {
-                ball.position.z = 1.25;
+                ball.position.z = 1;
             }
         }
     }

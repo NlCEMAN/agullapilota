@@ -4,8 +4,8 @@
         <contributor>
             <authoring_tool>SketchUp 17.2.2555</authoring_tool>
         </contributor>
-        <created>2018-05-13T21:09:04Z</created>
-        <modified>2018-05-13T21:09:04Z</modified>
+        <created>2018-05-19T02:28:53Z</created>
+        <modified>2018-05-19T02:28:53Z</modified>
         <unit meter="0.0254" name="inch" />
         <up_axis>Z_UP</up_axis>
     </asset>
@@ -36,7 +36,7 @@
                     </bind_material>
                 </instance_geometry>
                 <node name="skp_camera_Last_Saved_SketchUp_View">
-                    <matrix>0.999949 0.002730232 -0.009722495 911.8652 -0.01009857 0.2703446 -0.9627107 -1535.16 -9.540979e-18 0.9627597 0.2703584 1431.203 0 0 0 1</matrix>
+                    <matrix>0.883975 -0.02531922 -0.466848 301.8563 -0.4675341 -0.04787149 -0.8826779 -1064.186 1.387779e-17 0.9985325 -0.0541548 761.6752 0 0 0 1</matrix>
                     <instance_camera url="#ID1" />
                 </node>
             </node>
@@ -46,9 +46,9 @@
         <geometry id="ID3">
             <mesh>
                 <source id="ID6">
-                    <float_array id="ID8" count="27">853.101 -59.05512 596.0084 826.7717 -59.05512 491.82 879.209 -59.05512 717.189 901.0212 -59.05512 839.216 918.5103 -59.05512 961.9373 931.6547 -59.05512 1085.2 940.4378 -59.05512 1208.849 944.8487 -59.05512 1332.732 944.8819 -59.05512 1456.693</float_array>
+                    <float_array id="ID8" count="6">940.4378 5.684342e-13 1208.849 822.7297 -2.046363e-12 475.8254</float_array>
                     <technique_common>
-                        <accessor count="9" source="#ID8" stride="3">
+                        <accessor count="2" source="#ID8" stride="3">
                             <param name="X" type="float" />
                             <param name="Y" type="float" />
                             <param name="Z" type="float" />
@@ -58,15 +58,15 @@
                 <vertices id="ID7">
                     <input semantic="POSITION" source="#ID6" />
                 </vertices>
-                <lines count="8" material="Material2">
+                <lines count="1" material="Material2">
                     <input offset="0" semantic="VERTEX" source="#ID7" />
-                    <p>1 0 0 2 2 3 3 4 4 5 5 6 6 7 7 8</p>
+                    <p>1 0</p>
                 </lines>
             </mesh>
         </geometry>
     </library_geometries>
     <library_materials>
-        <material id="ID4" name="edge_color255250250255">
+        <material id="ID4" name="edge_color000255">
             <instance_effect url="#ID5" />
         </material>
     </library_materials>
@@ -76,7 +76,7 @@
                 <technique sid="COMMON">
                     <constant>
                         <transparent opaque="A_ONE">
-                            <color>1 0.9803922 0.9803922 1</color>
+                            <color>0 0 0 1</color>
                         </transparent>
                         <transparency>
                             <float>1</float>
