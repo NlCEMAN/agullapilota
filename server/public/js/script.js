@@ -22,7 +22,8 @@ var init = function() {
     scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 
     var loader = new THREE.ColladaLoader();
-    loader.load("models/supreme.dae", function(collada) {
+    loader.load("models/upNew.dae", function(collada) {
+    //loader.load("models/supreme.dae", function(collada) {
     //loader.load("models/upRickAndMorty.dae", function(collada) {
         scene.add(collada.scene);
     });
@@ -59,7 +60,9 @@ var init = function() {
     var theTop = 8.5;
 
     var inShuttle = true;
-    var theTopOfShuttle = 2.5;
+    var theTopOfShuttle = 3;
+    var timeToForce;
+    var spacePressed = false;
 
     for(var obj of baseGround) {
         for(var i = 0; i < obj.lines.length; i += 2) {
@@ -218,6 +221,13 @@ var init = function() {
         fixture.setSensor(true);
         fixture = fixture.getNext();
     }
+    //ShuttleSensor
+    fixture = bodys['lanzaderaOnTheTop'].getFixtureList();
+    while(fixture != null) {
+        fixture.m_filterCategoryBits = filterCategorySensor;
+        fixture.setSensor(true);
+        fixture = fixture.getNext();
+    }
 
     //RampLogicOnTheTop
     world.on('begin-contact', (contact, oldManifold) => {
@@ -267,6 +277,12 @@ var init = function() {
         if(bodyA == bodySalidaLanzadera) {
             let actualBall = contact.getFixtureB();
             actualBall.m_filterMaskBits = filterCategoryBall | filterCategoryGround | filterCategorySensor;
+        }
+    });
+    world.on('end-contact', (contact, oldManifold) => {
+        let bodyA = contact.getFixtureA().getBody();
+        let bodySalidaLanzadera = bodys['lanzaderaOnTheTop'].getFixtureList().getBody();
+        if(bodyA == bodySalidaLanzadera) {
             inShuttle = false;
         }
     });
@@ -320,6 +336,19 @@ var init = function() {
         if(evt.keyCode == 39 || evt.keyCode == 80) flippers.right = false;
     });
 
+    //LanzderaImpulso
+    document.body.addEventListener("keydown", evt => {
+        if(evt.keyCode == 32) {
+            if(!spacePressed && inShuttle) {
+                document.getElementById("containerProgressBar").style.visibility = "visible";
+                var visor = document.getElementById("progress");
+                visor.className += " active";
+                timeToForce = new Date().getTime();
+                spacePressed = true;
+            }
+        }
+    });
+
     document.body.addEventListener("keyup", evt => {
         if(evt.keyCode == 82) {
             ballBody.setLinearVelocity(Vec2(0, 0));
@@ -328,7 +357,18 @@ var init = function() {
             inShuttle = true;
         }
         if(evt.keyCode == 32) {
-            ballBody.applyLinearImpulse(Vec2(0, 254), Vec2(0,0), true);
+            if(inShuttle) {
+                var force = (new Date().getTime() - timeToForce) * 0.5;
+                if(force > 144 && force < 163) {
+                    force = 144;
+                }
+                var porcentaje = force * 100 / 300;
+                ballBody.applyLinearImpulse(Vec2(0, force), Vec2(0,0), true);
+                spacePressed = false;
+                document.getElementById("containerProgressBar").style.visibility = "hidden";
+                var visor = document.getElementById("progress");
+                visor.className = "";
+            }
         }
     });
 

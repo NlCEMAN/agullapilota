@@ -34,10 +34,10 @@
                 var bodys = {};
                 baseGround.forEach(e => bodys[e.name] = world.createBody());
 
-                var leftFlipperCustom = world.createDynamicBody({ position: Vec2(-7.92, -37.07), bullet: true  });
+                var leftFlipperCustom = world.createDynamicBody({ position: Vec2(-7.34, -37.5), bullet: true  });
                 leftFlipperCustom.createFixture(pl.Circle(1), 50);
 
-                var rightFlipperCustom = world.createDynamicBody({ position: Vec2(7.92, -37.07), bullet: true  });
+                var rightFlipperCustom = world.createDynamicBody({ position: Vec2(7.34, -37.5), bullet: true  });
                 rightFlipperCustom.createFixture(pl.Circle(1), 50);
 
                 for(var obj of baseGround) {
@@ -72,8 +72,8 @@
                     maxMotorTorque: 1000000
                 };
 
-                var joint = world.createJoint(pl.RevoluteJoint(optionJoint, bodys['groundInt'], leftFlipperCustom, Vec2(-8.09, -37.32)));
-                var joint2 = world.createJoint(pl.RevoluteJoint(optionJoint2, bodys['groundInt'], rightFlipperCustom, Vec2(7.92, -37.07)));
+                var joint = world.createJoint(pl.RevoluteJoint(optionJoint, bodys['groundInt'], leftFlipperCustom, Vec2(-7.34, -37.5)));
+                var joint2 = world.createJoint(pl.RevoluteJoint(optionJoint2, bodys['groundInt'], rightFlipperCustom, Vec2(7.34, -37.5)));
                 console.log(leftFlipperCustom);
                 console.log(joint);
 
